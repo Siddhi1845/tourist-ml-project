@@ -92,7 +92,9 @@ python app.py
 ---
 
 ## 📊 Dataset
-⚠️ Dataset is not included due to size constraints.
+- Dataset used: **maharashtra_destinations.csv**
+- Contains information about tourist places in Maharashtra
+- Used for training and generating recommendations
 
 ---
 
