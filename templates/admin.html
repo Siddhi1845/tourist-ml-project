@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard — Smart Travel Assistant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" />
+  <style>
+    body{padding:0 0 60px;}
+    .admin-topbar{
+      background:var(--navbar-bg);color:#fff;padding:12px 32px;
+      display:flex;justify-content:space-between;align-items:center;
+      position:sticky;top:0;z-index:1000;box-shadow:0 2px 16px rgba(0,0,0,.15);
+    }
+    .admin-topbar .brand{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;}
+    .admin-topbar .live-pill{background:#22c55e;border-radius:50px;padding:3px 14px;font-size:.75rem;font-weight:600;color:#fff;display:flex;align-items:center;gap:6px;}
+    .admin-hero{background:linear-gradient(135deg,#1f3c88,#11998e);border-radius:20px;padding:36px 44px;color:#fff;position:relative;overflow:hidden;margin-bottom:32px;}
+    .admin-hero::before{content:'';position:absolute;width:260px;height:260px;background:rgba(255,255,255,.07);border-radius:50%;top:-70px;right:-60px;}
+    .admin-hero h3{font-family:'Playfair Display',serif;font-size:1.7rem;margin-bottom:4px;}
+    .stat-chip{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:14px;padding:24px;text-align:center;transition:var(--transition);}
+    .stat-chip:hover{box-shadow:var(--card-hover-shadow);transform:translateY(-4px);}
+    .stat-num{font-size:2.2rem;font-weight:800;color:var(--brand-primary);font-family:'Playfair Display',serif;}
+    [data-theme="dark"] .stat-num{color:#7fb3f5;}
+    .stat-lbl{font-size:.82rem;color:var(--text-muted);margin-top:4px;}
+    .chart-wrap{height:240px;position:relative;}
+    .sec-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+    .sec-head h5{font-family:'Playfair Display',serif;font-weight:700;font-size:1.05rem;color:var(--brand-primary);margin:0;}
+    [data-theme="dark"] .sec-head h5{color:#7fb3f5;}
+    .sec-head .line{flex:1;height:1px;background:var(--border-color);}
+    .activity-scroll{max-height:210px;overflow-y:auto;padding-right:4px;}
+    .activity-item{padding:10px 0;border-bottom:1px solid var(--border-color);}
+    .activity-item:last-child{border-bottom:none;}
+    .activity-item strong{font-size:.88rem;color:var(--text-primary);}
+    .activity-item small{font-size:.76rem;color:var(--text-muted);}
+    .user-row td{vertical-align:middle;}
+    .notes-area{border-radius:10px;border:1.5px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);padding:12px;resize:vertical;}
+    .back-top{position:fixed;bottom:28px;right:28px;width:44px;height:44px;background:var(--brand-gradient);border:none;border-radius:50%;color:#fff;font-size:1.1rem;box-shadow:0 6px 18px rgba(31,60,136,.3);cursor:pointer;transition:all .28s;}
+    .back-top:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(31,60,136,.42);}
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="admin-topbar">
+    <div class="brand">🔐 Admin Control Center</div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="live-pill"><span class="live-dot"></span> Live</div>
+      <span id="clock" style="font-size:.82rem;opacity:.75;"></span>
+      <button onclick="location.reload()" class="btn btn-outline-light btn-sm">🔄</button>
+      <button class="btn btn-sm btn-dark theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <a href="/logout" onclick="return confirm('Logout?')" class="btn btn-sm btn-danger">Logout</a>
+    </div>
+  </div>
+
+  <div class="container py-4" style="max-width:1260px;">
+
+    <!-- HERO -->
+    <div class="admin-hero">
+      <h3 id="greeting">Admin Dashboard</h3>
+      <p style="opacity:.85;margin:0;">System Analytics & Control Center — Monitor activity and manage users.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-4"><div class="stat-chip"><div class="stat-num" id="searchCounter">0</div><div class="stat-lbl">Total Searches</div></div></div>
+      <div class="col-md-4"><div class="stat-chip"><div class="stat-num" id="favCounter">0</div><div class="stat-lbl">Total Favorites</div></div></div>
+      <div class="col-md-4"><div class="stat-chip"><div class="stat-num" id="tripCounter">0</div><div class="stat-lbl">Saved Trips</div></div></div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6">
+        <div class="glass-card">
+          <div class="sec-head"><h5>📊 Top Search Categories</h5><div class="line"></div></div>
+          <div class="chart-wrap"><canvas id="searchChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="glass-card">
+          <div class="sec-head"><h5>📈 Search Trends Over Time</h5><div class="line"></div></div>
+          <div class="chart-wrap"><canvas id="searchTrendChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OVERVIEW ROW -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-4">
+        <div class="glass-card h-100">
+          <div class="sec-head"><h5>⚙ Quick Actions</h5><div class="line"></div></div>
+          <div class="d-grid gap-2">
+            <a href="/" class="btn btn-outline-primary btn-sm">View Website</a>
+            <a href="/dashboard" class="btn btn-outline-success btn-sm">User Dashboard</a>
+            <a href="/export_users" class="btn btn-outline-dark btn-sm">Export Users (CSV)</a>
+            <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="glass-card h-100">
+          <div class="sec-head"><h5>🖥 System Info</h5><div class="line"></div></div>
+          <div style="font-size:.88rem;color:var(--text-secondary);">
+            <p class="mb-2"><strong>App:</strong> Smart Travel Assistant</p>
+            <p class="mb-2"><strong>Version:</strong> 1.0</p>
+            <p class="mb-3"><strong>Status:</strong> <span class="badge bg-success">Running</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="glass-card h-100">
+          <div class="sec-head"><h5>👤 Recent Users</h5><div class="line"></div></div>
+          {% for user in users[:5] %}
+          <div style="padding:7px 0;border-bottom:1px solid var(--border-color);">
+            <strong style="font-size:.88rem;color:var(--text-primary);">{{ user[1] }}</strong><br>
+            <small class="text-muted">{{ user[3] }}</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS TABLE + ACTIVITY -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-8">
+        <div class="glass-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="sec-head mb-0"><h5>👥 Registered Users</h5></div>
+            <input type="text" id="searchInput" class="form-control" style="max-width:220px;font-size:.85rem;" placeholder="Search...">
+          </div>
+          <div class="d-flex gap-2 mb-3">
+            <button onclick="bulkDelete()" class="btn btn-danger btn-sm">Delete Selected</button>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover rounded-3 overflow-hidden" id="userTable">
+              <thead>
+                <tr><th><input type="checkbox" id="selectAll"></th><th>ID</th><th>Username</th><th>Email</th><th>Joined</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                {% for user in users %}
+                <tr>
+                  <td><input type="checkbox" class="userCheck" value="{{ user[0] }}"></td>
+                  <td>{{ user[0] }}</td>
+                  <td><strong>{{ user[1] }}</strong></td>
+                  <td style="font-size:.85rem;color:var(--text-muted);">{{ user[2] }}</td>
+                  <td style="font-size:.82rem;color:var(--text-muted);">{{ user[3] }}</td>
+                  <td>
+                    <button class="btn btn-outline-primary btn-sm me-1" onclick="showUser('{{ user[1] }}','{{ user[2] }}','{{ user[3] }}')">View</button>
+                    {% if user[1] != "admin" %}
+                    <a href="/delete_user/{{ user[0] }}" class="btn btn-danger btn-sm">Del</a>
+                    {% else %}
+                    <span class="badge bg-secondary">Protected</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="glass-card h-100">
+          <div class="sec-head"><h5>🕒 Recent Activity</h5><div class="line"></div></div>
+          <input type="text" id="activitySearch" class="form-control mb-3" style="font-size:.85rem;" placeholder="Search activity...">
+          <div class="activity-scroll">
+            {% for act in recent_activity %}
+            <div class="activity-item">
+              <strong>{{ act[0] }}</strong> searched <em style="color:var(--brand-primary);">{{ act[1] }}</em><br>
+              <small>{{ act[2] }}</small>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN NOTES -->
+    <div class="glass-card mb-4">
+      <div class="sec-head"><h5>📝 Admin Notes</h5><div class="line"></div></div>
+      <textarea id="adminNote" class="notes-area w-100 mb-3" rows="3" placeholder="Add internal notes here..."></textarea>
+      <button onclick="saveNote()" class="btn btn-primary btn-sm">Save Note</button>
+    </div>
+
+  </div>
+
+  <!-- USER MODAL -->
+  <div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content" style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:16px;">
+        <div class="modal-header" style="border-bottom:1px solid var(--border-color);">
+          <h5 style="color:var(--text-primary);">User Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>Username:</strong> <span id="modalName" style="color:var(--brand-primary);"></span></p>
+          <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+          <p class="mb-0"><strong>Joined:</strong> <span id="modalDate"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="window.scrollTo({top:0,behavior:'smooth'})" class="back-top">↑</button>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    // Clock & Greeting
+    setInterval(()=>{ document.getElementById('clock').innerText=new Date().toLocaleTimeString(); },1000);
+    const h=new Date().getHours();
+    document.getElementById('greeting').innerText= h<12?'Good Morning, Admin ☀': h<18?'Good Afternoon, Admin 🌤':'Good Evening, Admin 🌙';
+
+    // Counters
+    function animateVal(id,end,dur){
+      const el=document.getElementById(id); let cur=0;
+      const step=Math.abs(Math.floor(dur/Math.max(end,1)));
+      const t=setInterval(()=>{ cur++; el.innerText=cur; if(cur>=end) clearInterval(t); },step);
+    }
+    window.onload=function(){ animateVal('searchCounter',{{ total_searches }},900); animateVal('favCounter',{{ total_favorites }},900); animateVal('tripCounter',{{ total_trips }},900); };
+
+    // Table search
+    document.getElementById('searchInput').addEventListener('keyup',function(){
+      const f=this.value.toLowerCase();
+      document.querySelectorAll('#userTable tbody tr').forEach(r=>{ r.style.display=r.textContent.toLowerCase().includes(f)?'':'none'; });
+    });
+
+    // Activity search
+    document.getElementById('activitySearch').addEventListener('keyup',function(){
+      const f=this.value.toLowerCase();
+      document.querySelectorAll('.activity-item').forEach(i=>{ i.style.display=i.textContent.toLowerCase().includes(f)?'':'none'; });
+    });
+
+    // Select all
+    document.getElementById('selectAll').addEventListener('change',function(){
+      document.querySelectorAll('.userCheck').forEach(cb=>cb.checked=this.checked);
+    });
+
+    // Bulk delete
+    function bulkDelete(){
+      const selected=[...document.querySelectorAll('.userCheck:checked')].map(cb=>cb.value);
+      if(!selected.length){ alert('No users selected'); return; }
+      if(confirm('Delete selected users?')) window.location.href='/bulk_delete?ids='+selected.join(',');
+    }
+
+    // Show user modal
+    function showUser(name,email,date){
+      document.getElementById('modalName').innerText=name;
+      document.getElementById('modalEmail').innerText=email;
+      document.getElementById('modalDate').innerText=date;
+      new bootstrap.Modal(document.getElementById('userModal')).show();
+    }
+
+    // Admin notes
+    function saveNote(){ localStorage.setItem('adminNote',document.getElementById('adminNote').value); }
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById('adminNote').value=localStorage.getItem('adminNote')||'';
+    });
+
+    // Charts
+    const labels={{ chart_labels | tojson }};
+    const dataValues={{ chart_values | tojson }};
+    const dates={{ dates | list | tojson if dates else [] }};
+    const counts={{ search_counts | list | tojson if search_counts else [] }};
+    let catBar, trendLine;
+    function renderAdminCharts(){
+      if(typeof window.getChartColors!=='function') return;
+      const th=window.getChartColors();
+      Chart.defaults.color=th.textColor;
+      if(labels.length>0){
+        const ctx=document.getElementById('searchChart');
+        if(catBar) catBar.destroy();
+        const g=ctx.getContext('2d').createLinearGradient(0,0,0,240);
+        g.addColorStop(0,th.primaryGradientStart); g.addColorStop(1,th.primaryGradientEnd);
+        catBar=new Chart(ctx,{
+          type:'bar',
+          data:{ labels,datasets:[{ label:'Searches',data:dataValues,backgroundColor:g,borderColor:th.primaryGradientStart,borderWidth:1,borderRadius:8,borderSkipped:false }]},
+          options:{ responsive:true,maintainAspectRatio:false,
+            scales:{ y:{beginAtZero:true,grid:{color:th.gridColor},ticks:{color:th.textColor}}, x:{grid:{display:false},ticks:{color:th.textColor}} },
+            plugins:{ legend:{display:false}, tooltip:{backgroundColor:th.tooltipBg,titleColor:th.tooltipText,bodyColor:th.tooltipText,cornerRadius:8} }
+          }
+        });
+      }
+      if(dates.length>0){
+        const ctx2=document.getElementById('searchTrendChart');
+        if(trendLine) trendLine.destroy();
+        const g2=ctx2.getContext('2d').createLinearGradient(0,0,0,240);
+        g2.addColorStop(0,'rgba(17,153,142,.6)'); g2.addColorStop(1,'rgba(17,153,142,.05)');
+        trendLine=new Chart(ctx2,{
+          type:'line',
+          data:{ labels:dates,datasets:[{ label:'Searches',data:counts,borderColor:'#11998e',backgroundColor:g2,borderWidth:2.5,fill:true,tension:.4,pointBackgroundColor:'#11998e',pointRadius:4,pointHoverRadius:6 }]},
+          options:{ responsive:true,maintainAspectRatio:false,
+            scales:{ y:{grid:{color:th.gridColor},ticks:{color:th.textColor}}, x:{grid:{display:false},ticks:{color:th.textColor}} },
+            plugins:{ legend:{display:false}, tooltip:{backgroundColor:th.tooltipBg,titleColor:th.tooltipText,bodyColor:th.tooltipText,cornerRadius:8} }
+          }
+        });
+      }
+    }
+    setTimeout(renderAdminCharts,120);
+    window.addEventListener('themeChanged',renderAdminCharts);
+  </script>
+</body>
+</html>

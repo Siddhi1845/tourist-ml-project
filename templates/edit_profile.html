@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Profile — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    .avatar-circle{
+      width:100px;height:100px;border-radius:50%;
+      background:var(--brand-gradient);color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:2.4rem;font-weight:700;margin:0 auto 18px;
+      box-shadow:0 8px 24px rgba(31,60,136,.3);
+    }
+    .form-label{font-size:.82rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+    .form-control,.form-select{border-radius:10px;border:1.5px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);padding:10px 14px;font-size:.9rem;}
+    .form-control:focus,.form-select:focus{border-color:var(--brand-primary);box-shadow:0 0 0 3px rgba(31,60,136,.15);}
+    .stat-mini{text-align:center;padding:14px;background:var(--bg-primary);border-radius:12px;border:1px solid var(--border-color);}
+    .stat-mini .num{font-size:1.5rem;font-weight:700;color:var(--brand-primary);}
+    .stat-mini .lbl{font-size:.75rem;color:var(--text-muted);margin-top:2px;}
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-custom px-4">
+    <a class="navbar-brand fw-bold" href="/home">🌍 Smart Travel Assistant</a>
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-dark btn-sm theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <a href="/dashboard" class="btn btn-sm btn-outline-light">Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="container py-5" style="max-width:1000px;">
+    <div class="page-title h3 mb-4">👤 My Profile</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}{% for cat,msg in messages %}
+    <div class="alert alert-success py-2 px-3 rounded-3 mb-4" style="font-size:.9rem;">✅ {{ msg }}</div>
+    {% endfor %}{% endif %}{% endwith %}
+
+    <div class="row g-4">
+      <!-- LEFT — Profile Summary -->
+      <div class="col-md-4">
+        <div class="glass-card text-center h-100">
+          {% if user|length > 9 and user[9] %}
+          <img src="{{ url_for('static', filename='uploads/' + user[9]) }}" alt="Profile Photo" class="avatar-circle" style="object-fit:cover; display:block;">
+          {% else %}
+          <div class="avatar-circle">{{ user[1][0]|upper }}</div>
+          {% endif %}
+          <h5 style="font-weight:700;font-size:1.15rem;">{{ user[1] }}</h5>
+          <p class="text-muted mb-1" style="font-size:.85rem;">{{ user[3] }}</p>
+          <span class="badge" style="background:var(--brand-gradient);color:#fff;margin-bottom:20px;">Explorer</span>
+          <hr style="border-color:var(--border-color);">
+          <div class="row g-2 mt-2 mb-3">
+            <div class="col-6"><div class="stat-mini"><div class="num">{{ user[8] }}</div><div class="lbl">Logins</div></div></div>
+            <div class="col-6"><div class="stat-mini"><div class="num">—</div><div class="lbl">Trips</div></div></div>
+          </div>
+          <div style="font-size:.85rem;text-align:left;padding:0 6px;">
+            <p class="mb-1"><strong>📍 Location:</strong> {{ user[4] or '—' }}</p>
+            <p class="mb-1"><strong>🎯 Interest:</strong> {{ user[5] or '—' }}</p>
+            <p class="mb-0 text-muted" style="font-size:.78rem;">Member since {{ user[6] }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT — Edit Form -->
+      <div class="col-md-8">
+        <div class="glass-card">
+          <h5 style="font-weight:700;margin-bottom:24px;">Update Information</h5>
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label">Profile Photo</label>
+              <input type="file" name="profile_photo" class="form-control" accept="image/*">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" name="email" class="form-control" value="{{ user[3] }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Location</label>
+              <input type="text" name="location" class="form-control" value="{{ user[4] }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Travel Interest</label>
+              <input type="text" name="interest" class="form-control" value="{{ user[5] }}">
+            </div>
+            <div class="mb-4">
+              <label class="form-label">New Password</label>
+              <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current">
+            </div>
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+              <a href="/dashboard" class="btn btn-outline-secondary px-4">← Back</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

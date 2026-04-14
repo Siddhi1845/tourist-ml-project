@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reset Password — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+    .reset-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:20px;box-shadow:0 12px 40px rgba(0,0,0,.1);padding:44px 40px;width:100%;max-width:400px;}
+    .reset-card h2{font-family:'Playfair Display',serif;font-weight:700;font-size:1.6rem;margin-bottom:6px;color:var(--text-primary);}
+    .form-control{border-radius:10px;border:1.5px solid var(--border-color);padding:10px 14px;font-size:.9rem;background:var(--bg-primary);color:var(--text-primary);}
+    .form-control:focus{border-color:var(--brand-primary);box-shadow:0 0 0 3px rgba(31,60,136,.15);}
+    .btn-reset{background:linear-gradient(135deg,#1f3c88,#3c5ccf);border:none;border-radius:12px;padding:11px;font-size:.95rem;font-weight:600;color:#fff;box-shadow:0 6px 20px rgba(31,60,136,.25);transition:all .3s;}
+    .btn-reset:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(31,60,136,.38);color:#fff;}
+    .theme-toggle{position:fixed;top:16px;right:20px;}
+  </style>
+</head>
+<body>
+<div class="theme-toggle"><button class="btn btn-sm btn-dark theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button></div>
+<div class="reset-card">
+  <div style="text-align:center;margin-bottom:24px;"><span style="font-size:2.5rem;">🔐</span></div>
+  <h2 class="text-center">Reset Password</h2>
+  <p style="color:var(--text-muted);font-size:.88rem;text-align:center;margin-bottom:26px;">Choose a strong new password for your account.</p>
+  {% if error %}<div class="alert alert-danger py-2 px-3 rounded-3" style="font-size:.88rem;">{{ error }}</div>{% endif %}
+  <form method="POST">
+    <div class="mb-3">
+      <input type="password" name="new_password" class="form-control" placeholder="New Password" required>
+    </div>
+    <div class="mb-4">
+      <input type="password" name="confirm_password" class="form-control" placeholder="Confirm Password" required>
+    </div>
+    <button type="submit" class="btn btn-reset w-100">Update Password →</button>
+  </form>
+</div>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

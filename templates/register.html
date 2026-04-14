@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    html,body{height:100%;margin:0;}
+    .split-wrap{display:flex;min-height:100vh;font-family:'Inter',sans-serif;}
+    .left-panel{
+      flex:1;position:relative;overflow:hidden;
+      background:linear-gradient(150deg,#0d1b4b 0%,#1f3c88 50%,#11998e 100%);
+      display:flex;flex-direction:column;justify-content:center;padding:70px 60px;color:#fff;
+    }
+    .bg-circles span{position:absolute;border-radius:50%;opacity:.10;}
+    .bg-circles span:nth-child(1){width:350px;height:350px;background:#fff;top:-80px;left:-80px;}
+    .bg-circles span:nth-child(2){width:200px;height:200px;background:#38ef7d;bottom:30px;right:-50px;}
+    .brand-logo{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:28px;}
+    .brand-logo span{color:#38ef7d;}
+    .feature-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+    .pill{background:rgba(255,255,255,.13);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:50px;padding:6px 16px;font-size:.82rem;color:#e8f4fd;}
+    .right-panel{
+      flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+      background:#f0f4fc;padding:50px 36px;overflow-y:auto;
+    }
+    [data-theme="dark"] .right-panel{background:#0b1120;}
+    .form-box{width:100%;max-width:420px;}
+    .form-box h2{font-family:'Playfair Display',serif;font-weight:700;font-size:1.7rem;margin-bottom:5px;color:#1a202c;}
+    [data-theme="dark"] .form-box h2{color:#e8edf7;}
+    .form-box .sub{color:#718096;font-size:.88rem;margin-bottom:22px;}
+    .input-wrap{position:relative;}
+    .input-wrap .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:.88rem;z-index:2;color:#9aa5be;}
+    .input-wrap input,.input-wrap select{padding-left:38px;}
+    .form-control,.form-select{
+      border-radius:10px;border:1.5px solid #dde3f0;padding:9px 12px;font-size:.88rem;
+      background:#fff;color:#1a202c;transition:all .25s;
+    }
+    [data-theme="dark"] .form-control,[data-theme="dark"] .form-select{background:#151f35;border-color:#243052;color:#e8edf7;}
+    .form-control:focus,.form-select:focus{border-color:#1f3c88;box-shadow:0 0 0 3px rgba(31,60,136,.15);}
+    .btn-register{
+      background:linear-gradient(135deg,#11998e,#38ef7d);border:none;border-radius:12px;
+      padding:11px;font-size:.95rem;font-weight:600;color:#fff;
+      box-shadow:0 6px 20px rgba(17,153,142,.3);transition:all .3s;
+    }
+    .btn-register:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(17,153,142,.4);color:#fff;}
+    .toggle-vis{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.9rem;color:#aaa;z-index:3;}
+    .strength-bar{height:5px;border-radius:50px;transition:all .3s;background:#e0e5f0;}
+    .strength-fill{height:5px;border-radius:50px;transition:width .3s,background .3s;width:0;}
+    .theme-toggle{position:fixed;top:16px;right:20px;z-index:999;}
+    .back-link{font-size:.85rem;text-align:center;margin-top:16px;}
+    .back-link a{color:#1f3c88;text-decoration:none;font-weight:500;}
+    [data-theme="dark"] .back-link a{color:#7fb3f5;}
+  </style>
+</head>
+<body>
+<div class="theme-toggle">
+  <button class="btn btn-sm btn-dark theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+</div>
+<div class="split-wrap">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="bg-circles"><span></span><span></span></div>
+    <div class="brand-logo">🌍 Smart<span>Travel</span></div>
+    <p style="font-size:1.2rem;font-weight:300;line-height:1.7;"><strong>"The world is a book and those who do not travel read only one page."</strong></p>
+    <p style="opacity:.7;font-size:.9rem;margin-top:12px;">Join thousands of smart travellers exploring Maharashtra.</p>
+    <div class="feature-pills">
+      <span class="pill">🤖 AI-Powered Picks</span>
+      <span class="pill">🗺 Trip Planning</span>
+      <span class="pill">📊 Travel Analytics</span>
+      <span class="pill">❤️ Saved Favorites</span>
+    </div>
+  </div>
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="form-box">
+      <h2>Create Account ✨</h2>
+      <p class="sub">Start exploring smarter today</p>
+      {% if error %}<div class="alert alert-danger py-2 px-3 rounded-3" style="font-size:.88rem;">{{ error }}</div>{% endif %}
+      <form method="POST">
+        <div class="mb-3 input-wrap">
+          <span class="ico">👤</span>
+          <input type="text" name="username" class="form-control" placeholder="Username" required>
+        </div>
+        <div class="mb-3 input-wrap">
+          <span class="ico">📧</span>
+          <input type="email" name="email" class="form-control" placeholder="Email Address" required>
+        </div>
+        <div class="mb-1 input-wrap" style="position:relative;">
+          <span class="ico">🔑</span>
+          <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+          <button type="button" class="toggle-vis" onclick="toggleVis('password')">👁</button>
+        </div>
+        <div class="mb-1"><div class="strength-bar"><div id="strengthFill" class="strength-fill"></div></div></div>
+        <div id="strengthText" style="font-size:.78rem;margin-bottom:10px;color:#718096;"></div>
+        <div class="mb-3 input-wrap" style="position:relative;">
+          <span class="ico">🔁</span>
+          <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Confirm Password" required>
+          <button type="button" class="toggle-vis" onclick="toggleVis('confirm_password')">👁</button>
+        </div>
+        <small id="password_error" class="text-danger d-block mb-2"></small>
+        <div class="mb-3 input-wrap">
+          <span class="ico">📍</span>
+          <input type="text" name="location" class="form-control" placeholder="Your Location" required>
+        </div>
+        <div class="mb-4 input-wrap">
+          <span class="ico">🎯</span>
+          <select name="interest" class="form-select">
+            <option>Adventure</option>
+            <option>Relaxation</option>
+            <option>Cultural</option>
+            <option>Spiritual</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-register w-100">Create My Account →</button>
+      </form>
+      <p class="back-link"><a href="/">Already have an account? Sign in</a></p>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+<script>
+function toggleVis(id){
+  const f=document.getElementById(id);
+  f.type=f.type==='password'?'text':'password';
+}
+const pw=document.getElementById('password');
+const cpw=document.getElementById('confirm_password');
+const pwErr=document.getElementById('password_error');
+cpw.addEventListener('input',()=>{
+  pwErr.textContent=pw.value!==cpw.value?'Passwords do not match ❌':'';
+});
+pw.addEventListener('input',function(){
+  const v=pw.value; let s=0;
+  if(v.length>=6)s++; if(/[A-Z]/.test(v))s++; if(/[0-9]/.test(v))s++; if(/[^A-Za-z0-9]/.test(v))s++;
+  const f=document.getElementById('strengthFill');
+  const t=document.getElementById('strengthText');
+  const levels=[['0%','#e0e5f0',''],['25%','#ef4444','Weak 🔴'],['50%','#f59e0b','Fair 🟡'],['75%','#3b82f6','Good 🔵'],['100%','#22c55e','Strong 🟢']];
+  f.style.width=levels[s][0]; f.style.background=levels[s][1]; t.textContent=levels[s][2];
+});
+</script>
+</body>
+</html>

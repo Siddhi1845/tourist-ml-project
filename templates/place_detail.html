@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ place.Place }} — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    /* HERO */
+    .place-hero { position:relative; height:520px; overflow:hidden; }
+    .place-hero img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .5s ease; }
+    .place-hero:hover img { transform:scale(1.03); }
+    .place-hero-overlay {
+      position:absolute; inset:0;
+      background:linear-gradient(to top,rgba(0,0,0,.72) 0%,rgba(0,0,0,.2) 60%,transparent 100%);
+      display:flex; align-items:flex-end; padding:48px 52px;
+    }
+    .place-hero-overlay h1 { font-family:'Playfair Display',serif; font-size:clamp(2rem,4vw,3rem); color:#fff; font-weight:700; margin:0; line-height:1.1; }
+    .hero-badges { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .hero-badge { background:rgba(255,255,255,.18); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.25); border-radius:50px; padding:5px 16px; color:#fff; font-size:.8rem; font-weight:500; }
+    .hero-badge.gold { background:linear-gradient(135deg,rgba(247,151,30,.85),rgba(255,210,0,.85)); color:#1a202c; }
+
+    /* INFO GRID */
+    .info-chip { background:var(--bg-primary); border:1px solid var(--border-color); border-radius:12px; padding:14px 18px; }
+    .info-chip .label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:4px; }
+    .info-chip .val { font-size:1.05rem; font-weight:700; color:var(--text-primary); }
+
+    /* SECTION HEAD */
+    .sec-head { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .sec-head h3 { font-family:'Playfair Display',serif; font-weight:700; font-size:1.3rem; color:var(--brand-primary); margin:0; white-space:nowrap; }
+    [data-theme="dark"] .sec-head h3 { color:#7fb3f5; }
+    .sec-head .line { flex:1; height:1px; background:var(--border-color); }
+
+    /* HOTEL CARD */
+    .hotel-card { background:var(--bg-primary); border:1px solid var(--border-color); border-radius:14px; padding:18px; }
+    .hotel-card .htype { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); }
+    .hotel-card .hname { font-weight:700; font-size:1rem; color:var(--text-primary); margin:4px 0 2px; }
+    .hotel-card .hprice { font-size:.9rem; color:var(--brand-accent); font-weight:600; }
+
+    /* COST ESTIMATOR */
+    #costResult { border-radius:14px; padding:20px; background:var(--bg-primary); border:1px solid var(--border-color); }
+
+    /* DESTINATION CARD */
+    .dest-card img { height:190px; width:100%; object-fit:cover; transition:transform .35s; }
+    .dest-card:hover img { transform:scale(1.06); }
+    .dest-card .card-body a { text-decoration:none; font-weight:700; color:var(--brand-primary); font-size:.95rem; }
+    [data-theme="dark"] .dest-card .card-body a { color:#7fb3f5; }
+
+    /* STICKY NAV */
+    .sticky-nav { position:sticky; top:0; z-index:900; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-custom px-4 sticky-nav">
+    <a class="navbar-brand fw-bold" href="/home">🌍 Smart Travel Assistant</a>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <button class="btn btn-dark btn-sm theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <a href="/dashboard" class="btn btn-sm btn-outline-light">Dashboard</a>
+      <a href="/home" class="btn btn-sm btn-outline-light">Explore</a>
+    </div>
+  </nav>
+
+  <!-- HERO IMAGE -->
+  <div class="place-hero">
+    <img src="{{ place.Image_URL }}" alt="{{ place.Place }}">
+    <div class="place-hero-overlay">
+      <div>
+        <h1>{{ place.Place }}</h1>
+        <div class="hero-badges">
+          <span class="hero-badge gold">⭐ {{ place.Rating }}</span>
+          <span class="hero-badge">{{ place.Type }}</span>
+          <span class="hero-badge">{{ place.Season }}</span>
+          <span class="hero-badge">💰 ₹{{ place.Approx_Cost }}</span>
+          <span class="hero-badge">📍 {{ place.District }}, Maharashtra</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-5" style="max-width:1060px;">
+
+    <!-- INFO CHIPS -->
+    <div class="row g-3 mb-5">
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Type</div><div class="val">{{ place.Type }}</div></div></div>
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Season</div><div class="val">{{ place.Season }}</div></div></div>
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Interest</div><div class="val">{{ place.Interest }}</div></div></div>
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Budget</div><div class="val">{{ place.Budget }}</div></div></div>
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Rating</div><div class="val">⭐ {{ place.Rating }}</div></div></div>
+      <div class="col-6 col-md-2"><div class="info-chip"><div class="label">Est. Cost</div><div class="val">₹{{ place.Approx_Cost }}</div></div></div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="sec-head"><h3>About This Destination</h3><div class="line"></div></div>
+    <div class="glass-card mb-5">
+      <p style="font-size:1rem;line-height:1.75;margin:0;">
+        {{ place.Place }} is a beautiful <strong>{{ place.Type }}</strong> destination ideal for
+        <strong>{{ place.Interest }}</strong> travellers. Best season to visit: <strong>{{ place.Season }}</strong>.
+        {{ short_description }}
+      </p>
+    </div>
+
+    <!-- HOTELS -->
+    <div class="sec-head"><h3>🏨 Accommodation Options</h3><div class="line"></div></div>
+    <div class="row g-3 mb-5">
+      <div class="col-md-6">
+        <div class="hotel-card">
+          <div class="htype">Budget Option</div>
+          <div class="hname">{{ place.Hotel_Budget }}</div>
+          <div class="hprice">₹{{ place.Hotel_Budget_Price }} / night</div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="hotel-card" style="border-left:3px solid #f7971e;">
+          <div class="htype">Premium Option 🌟</div>
+          <div class="hname">{{ place.Hotel_Premium }}</div>
+          <div class="hprice">₹{{ place.Hotel_Premium_Price }} / night</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO -->
+    {% if place.Youtube_Link %}
+    <div class="sec-head"><h3>🎥 Video Guide</h3><div class="line"></div></div>
+    <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm mb-5">
+      <iframe src="{{ place.Youtube_Link }}" frameborder="0" allowfullscreen></iframe>
+    </div>
+    {% endif %}
+
+    <!-- MAP -->
+    <div class="sec-head"><h3>📍 Location Map</h3><div class="line"></div></div>
+    <div class="glass-card mb-5">
+      <div class="ratio ratio-16x9 rounded-3 overflow-hidden mb-3">
+        <iframe src="https://www.google.com/maps?q={{ place.Latitude }},{{ place.Longitude }}&z=14&output=embed" style="border:0;" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted" style="font-size:.85rem;">🌍 {{ place.Latitude }}, {{ place.Longitude }}</span>
+        <a href="https://www.google.com/maps?q={{ place.Latitude }},{{ place.Longitude }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">🧭 Open in Google Maps</a>
+      </div>
+    </div>
+
+    <!-- COST ESTIMATOR -->
+    <div class="sec-head"><h3>🧮 Trip Cost Estimator</h3><div class="line"></div></div>
+    <div class="glass-card mb-5">
+      <div class="row g-3 mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Number of Days</label>
+          <input type="number" id="days" class="form-control" value="2" min="1">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Number of People</label>
+          <input type="number" id="people" class="form-control" value="2" min="1">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Hotel Type</label>
+          <select id="hotelType" class="form-select">
+            <option value="budget">Budget</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="calculateCost()" class="btn btn-primary">Calculate Estimate →</button>
+      <div id="costResult" class="mt-4" style="display:none;"></div>
+    </div>
+
+    <!-- RELATED -->
+    <div class="sec-head"><h3>✨ Related Destinations</h3><div class="line"></div></div>
+    <div class="row g-4 mb-5">
+      {% for item in related_places %}
+      <div class="col-md-4">
+        <div class="card dest-card">
+          <img src="{{ item.Image_URL }}" loading="lazy">
+          <div class="card-body">
+            <h5><a href="/place/{{ item.Place }}">{{ item.Place }}</a></h5>
+            <p class="text-muted mb-0" style="font-size:.83rem;">⭐ {{ item.Rating }} &nbsp;|&nbsp; 💰 ₹{{ item.Approx_Cost }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- NEARBY -->
+    <div class="sec-head"><h3>📍 Nearby Destinations</h3><div class="line"></div></div>
+    <div class="row g-4 mb-5">
+      {% for item in nearby_places %}
+      <div class="col-md-4">
+        <div class="card dest-card">
+          <img src="{{ item.Image_URL }}" loading="lazy">
+          <div class="card-body">
+            <h5><a href="/place/{{ item.Place }}">{{ item.Place }}</a></h5>
+            <p class="text-muted mb-0" style="font-size:.83rem;">⭐ {{ item.Rating }} &nbsp;|&nbsp; 📏 {{ item.Distance|round(1) }} km away</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- BACK BUTTONS -->
+    <div class="d-flex gap-3 justify-content-center">
+      <a href="/dashboard" class="btn btn-outline-secondary px-4">← Dashboard</a>
+      <a href="/home" class="btn btn-primary px-4">Explore More →</a>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function calculateCost(){
+      const days=parseInt(document.getElementById('days').value)||0;
+      const people=parseInt(document.getElementById('people').value)||0;
+      const hotelType=document.getElementById('hotelType').value;
+      const baseCost=Number("{{ place.Approx_Cost }}")||0;
+      const hotelBudget=Number("{{ place.Hotel_Budget_Price }}")||0;
+      const hotelPremium=Number("{{ place.Hotel_Premium_Price }}")||0;
+      const hotelCost=hotelType==='budget'?hotelBudget:hotelPremium;
+      const baseTotal=baseCost*people;
+      const hotelTotal=hotelCost*days;
+      const total=baseTotal+hotelTotal;
+      const r=document.getElementById('costResult');
+      r.style.display='block';
+      r.innerHTML=`
+        <div class="row g-3">
+          <div class="col-md-4"><div style="text-align:center;"><div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px;">Base Cost</div><div style="font-size:1.4rem;font-weight:700;color:var(--text-primary);">₹${baseTotal.toLocaleString()}</div><div style="font-size:.78rem;color:var(--text-muted);">${people} person(s)</div></div></div>
+          <div class="col-md-4"><div style="text-align:center;"><div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px;">Hotel Cost</div><div style="font-size:1.4rem;font-weight:700;color:var(--text-primary);">₹${hotelTotal.toLocaleString()}</div><div style="font-size:.78rem;color:var(--text-muted);">${days} night(s)</div></div></div>
+          <div class="col-md-4"><div style="text-align:center;"><div style="font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px;">Total Estimate</div><div style="font-size:1.6rem;font-weight:800;color:#11998e;">₹${total.toLocaleString()}</div><div style="font-size:.78rem;color:var(--text-muted);">all inclusive</div></div></div>
+        </div>`;
+    }
+  </script>
+  {% include 'chatbot.html' %}
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    html,body{height:100%;margin:0;overflow:hidden;}
+    .split-wrap{display:flex;height:100vh;font-family:'Inter',sans-serif;}
+    /* LEFT PANEL */
+    .left-panel{
+      flex:1;position:relative;overflow:hidden;
+      background:linear-gradient(150deg,#0d1b4b 0%,#1f3c88 45%,#11998e 100%);
+      display:flex;flex-direction:column;justify-content:center;padding:70px 60px;color:#fff;
+    }
+    .left-panel .bg-circles span{
+      position:absolute;border-radius:50%;opacity:.12;
+    }
+    .left-panel .bg-circles span:nth-child(1){width:380px;height:380px;background:#fff;top:-80px;left:-100px;}
+    .left-panel .bg-circles span:nth-child(2){width:220px;height:220px;background:#38ef7d;bottom:40px;right:-60px;}
+    .left-panel .bg-circles span:nth-child(3){width:120px;height:120px;background:#fff;bottom:180px;left:40px;}
+    .brand-logo{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:32px;position:relative;}
+    .brand-logo span{color:#38ef7d;}
+    .quote-text{font-size:1.3rem;font-weight:300;line-height:1.65;position:relative;margin-bottom:24px;}
+    .quote-text strong{font-weight:600;}
+    .feature-pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;position:relative;}
+    .pill{background:rgba(255,255,255,.14);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22);
+          border-radius:50px;padding:6px 16px;font-size:.82rem;color:#e8f4fd;}
+    /* RIGHT PANEL */
+    .right-panel{
+      flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+      background:#f0f4fc;padding:50px 40px;overflow-y:auto;
+    }
+    [data-theme="dark"] .right-panel{background:#0b1120;}
+    .form-box{width:100%;max-width:400px;}
+    .form-box h2{font-family:'Playfair Display',serif;font-weight:700;font-size:1.8rem;margin-bottom:6px;color:#1a202c;}
+    [data-theme="dark"] .form-box h2{color:#e8edf7;}
+    .form-box .sub{color:#718096;font-size:.9rem;margin-bottom:28px;}
+    .input-group-icon{position:relative;}
+    .input-group-icon .icon{position:absolute;top:50%;transform:translateY(-50%);left:14px;color:#9aa5be;font-size:.95rem;z-index:2;}
+    .input-group-icon input{padding-left:40px;}
+    .btn-login{
+      background:linear-gradient(135deg,#1f3c88,#3c5ccf);border:none;border-radius:12px;
+      padding:12px;font-size:1rem;font-weight:600;letter-spacing:.3px;color:#fff;
+      box-shadow:0 6px 20px rgba(31,60,136,.3);transition:all .3s;
+    }
+    .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(31,60,136,.4);color:#fff;}
+    .divider-or{display:flex;align-items:center;gap:12px;color:#aaa;margin:18px 0;}
+    .divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:#dde3f0;}
+    [data-theme="dark"] .divider-or::before,[data-theme="dark"] .divider-or::after{background:#243052;}
+    .links-row{display:flex;justify-content:space-between;margin-top:18px;font-size:.85rem;}
+    .links-row a{color:#1f3c88;text-decoration:none;font-weight:500;}
+    [data-theme="dark"] .links-row a{color:#7fb3f5;}
+    .links-row a:hover{text-decoration:underline;}
+    .form-control{border-radius:10px;border:1.5px solid #dde3f0;padding:10px 14px 10px 40px;font-size:.9rem;background:#fff;color:#1a202c;}
+    [data-theme="dark"] .form-control{background:#151f35;border-color:#243052;color:#e8edf7;}
+    .form-control:focus{border-color:#1f3c88;box-shadow:0 0 0 3px rgba(31,60,136,.15);}
+    .theme-toggle{position:fixed;top:16px;right:20px;z-index:999;}
+  </style>
+</head>
+<body>
+<div class="theme-toggle">
+  <button class="btn btn-sm btn-dark theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+</div>
+<div class="split-wrap">
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="bg-circles"><span></span><span></span><span></span></div>
+    <div class="brand-logo">🌍 Smart<span>Travel</span></div>
+    <p class="quote-text"><strong>"Travel is the only thing you buy<br>that makes you richer."</strong></p>
+    <p style="opacity:.7;font-size:.92rem;">Discover AI-powered destinations tailored just for you.</p>
+    <div class="feature-pills">
+      <span class="pill">🤖 AI Recommendations</span>
+      <span class="pill">🗺 Smart Trip Planner</span>
+      <span class="pill">⭐ 500+ Destinations</span>
+      <span class="pill">📊 Travel Insights</span>
+    </div>
+  </div>
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="form-box">
+      <h2>Welcome back 👋</h2>
+      <p class="sub">Sign in to continue your journey</p>
+      {% if error %}
+      <div class="alert alert-danger py-2 px-3 rounded-3" style="font-size:.88rem;">{{ error }}</div>
+      {% endif %}
+      <form method="POST">
+        <div class="mb-3 input-group-icon">
+          <span class="icon">👤</span>
+          <input type="text" name="username" class="form-control" placeholder="Username" required>
+        </div>
+        <div class="mb-4 input-group-icon">
+          <span class="icon">🔑</span>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-login w-100">Sign In →</button>
+      </form>
+      <div class="links-row">
+        <a href="/register">Create an account</a>
+        <a href="/forgot">Forgot password?</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</body>
+</html>

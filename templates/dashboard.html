@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard — Smart Travel Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    /* page loader */
+    #loader{position:fixed;inset:0;background:var(--bg-primary);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s;}
+    #loader .spinner-border{width:3rem;height:3rem;border-color:var(--brand-primary) transparent transparent transparent;}
+
+    /* quick-action card */
+    .qa-card{
+      background:var(--bg-secondary);border:1px solid var(--border-color);
+      border-radius:14px;padding:20px 22px;display:flex;align-items:center;gap:16px;
+      text-decoration:none;color:var(--text-primary);transition:all .28s;
+    }
+    .qa-card:hover{transform:translateY(-4px);box-shadow:var(--card-hover-shadow);color:var(--text-primary);}
+    .qa-card .icon-wrap{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+    .qa-card .label{font-weight:600;font-size:.95rem;}
+    .qa-card .hint{font-size:.78rem;color:var(--text-muted);}
+
+    /* section pill header */
+    .sec-head{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+    .sec-head .sec-line{flex:1;height:1px;background:var(--border-color);}
+    .sec-head h4{font-family:'Playfair Display',serif;font-weight:700;font-size:1.25rem;color:var(--brand-primary);margin:0;white-space:nowrap;}
+    [data-theme="dark"] .sec-head h4{color:#7fb3f5;}
+
+    /* top rated card */
+    .top-card img{height:190px;width:100%;object-fit:cover;transition:transform .35s;}
+    .top-card:hover img{transform:scale(1.05);}
+
+    /* insight row */
+    .insight-box{background:var(--bg-primary);border:1px solid var(--border-color);border-radius:14px;padding:18px 20px;}
+    .insight-box h6{font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px;}
+    .insight-val{font-size:1rem;font-weight:500;color:var(--text-primary);}
+
+    /* saved trips */
+    .trip-row{
+      display:flex;justify-content:space-between;align-items:center;
+      background:var(--bg-secondary);border:1px solid var(--border-color);
+      border-radius:14px;padding:16px 20px;margin-bottom:12px;transition:var(--transition);
+    }
+    .trip-row:hover{box-shadow:var(--card-shadow);transform:translateX(3px);}
+
+    /* motivation banner */
+    .motivation-banner{
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+      border-radius:20px;padding:36px 40px;color:#fff;text-align:center;
+    }
+    .motivation-banner h4{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:8px;}
+    .motivation-banner p{opacity:.88;margin:0;font-size:1rem;}
+
+    /* chart containers */
+    .chart-wrap{position:relative;height:280px;}
+  </style>
+</head>
+<body>
+  <div id="loader"><div class="spinner-border" role="status"></div></div>
+
+  <nav class="navbar navbar-expand-lg navbar-custom px-4">
+    <a class="navbar-brand fw-bold" href="#">🌍 Smart Travel Assistant</a>
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <button class="btn btn-dark btn-sm theme-toggle-btn" onclick="toggleTheme()">🌙 Dark</button>
+      <a href="/dashboard" class="btn btn-sm btn-outline-light">Dashboard</a>
+      <a href="/home" class="btn btn-sm btn-outline-light">Explore</a>
+      <a href="/trip_planner" class="btn btn-sm btn-outline-light">Trip Planner</a>
+      <a href="/edit_profile" class="btn btn-sm btn-outline-light">Profile</a>
+      <a href="/logout" class="btn btn-sm btn-outline-light">Logout</a>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width:1200px;">
+
+    <!-- HERO -->
+    <div class="hero mb-4">
+      <div class="row align-items-center">
+        <div class="col-md-12">
+          {% if current_hour < 12 %}<h2>🌅 Good Morning, {{ user[1] }}!</h2>
+          {% elif current_hour < 18 %}<h2>☀ Good Afternoon, {{ user[1] }}!</h2>
+          {% else %}<h2>🌙 Good Evening, {{ user[1] }}!</h2>{% endif %}
+          <p class="mt-2 mb-0">Your AI-powered travel companion is ready. Member since {{ user[6] }} · {{ user[8] }} logins</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-3"><div class="stat-card gradient-1"><h3 class="counter" data-target="{{ total_searches }}">0</h3><p>Total Searches</p></div></div>
+      <div class="col-md-3"><div class="stat-card gradient-2"><h3 class="counter" data-target="{{ total_favorites }}">0</h3><p>Favorites Saved</p></div></div>
+      <div class="col-md-3"><div class="stat-card gradient-3"><h3 class="counter" data-target="{{ total_trips }}">0</h3><p>Trips Planned</p></div></div>
+      <div class="col-md-3">
+        <div class="stat-card gradient-4">
+          <h5>{% if most_visited %}{{ most_visited }}{% else %}—{% endif %}</h5>
+          <p>Most Explored</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="sec-head"><h4>⚡ Quick Actions</h4><div class="sec-line"></div></div>
+    <div class="row g-3 mb-5">
+      <div class="col-md-4">
+        <a href="/home" class="qa-card">
+          <div class="icon-wrap" style="background:linear-gradient(135deg,#1f3c88,#3c5ccf);">🔍</div>
+          <div><div class="label">Explore Destinations</div><div class="hint">AI-powered recommendations</div></div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="/trip_planner" class="qa-card">
+          <div class="icon-wrap" style="background:linear-gradient(135deg,#11998e,#38ef7d);">🗺</div>
+          <div><div class="label">Plan New Trip</div><div class="hint">Smart itinerary builder</div></div>
+        </a>
+      </div>
+      <div class="col-md-4">
+        <a href="/download_trip" class="qa-card">
+          <div class="icon-wrap" style="background:linear-gradient(135deg,#f7971e,#ffd200);">📥</div>
+          <div><div class="label">Download Last Trip</div><div class="hint">Export as PDF</div></div>
+        </a>
+      </div>
+    </div>
+
+    <!-- AI INSIGHTS -->
+    <div class="sec-head"><h4>🧠 AI Travel Insights</h4><div class="sec-line"></div></div>
+    <div class="row g-3 mb-5">
+      <div class="col-md-4">
+        <div class="insight-box">
+          <h6>Travel Personality</h6>
+          <div class="insight-val">{{ personality }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="insight-box">
+          <h6>Budget Behaviour</h6>
+          <div class="insight-val">{{ budget_style }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="insight-box">
+          <h6>Activity Level</h6>
+          <div class="d-flex align-items-center gap-2 mt-2">
+            <div class="progress flex-fill" style="height:10px;">
+              <div class="progress-bar bg-success activity-bar" role="progressbar">{{ activity_score }}%</div>
+            </div>
+            <span style="font-size:.85rem;font-weight:600;color:var(--text-muted);">{{ activity_score }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-5">
+        <div class="glass-card">
+          <div class="sec-head" style="margin-bottom:18px;"><h4>📊 Category Distribution</h4></div>
+          <div class="chart-wrap"><canvas id="categoryChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-md-7">
+        <div class="glass-card">
+          <div class="sec-head" style="margin-bottom:18px;"><h4>📈 Top Trending Places</h4></div>
+          <div class="chart-wrap"><canvas id="trendingChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP RATED -->
+    <div class="sec-head"><h4>⭐ Top Rated Destinations</h4><div class="sec-line"></div></div>
+    <div class="row g-4 mb-5">
+      {% for place in top_rated_places %}
+      <div class="col-md-4">
+        <div class="card top-card hover-card">
+          <img src="{{ place['Image_URL'] }}" loading="lazy">
+          <div class="card-body">
+            <h5 class="card-title" style="font-weight:700;">{{ place['Place'] }}</h5>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge" style="background:linear-gradient(135deg,#f7971e,#ffd200);color:#1a202c;">⭐ {{ place['Rating'] }}</span>
+              <span class="text-muted" style="font-size:.82rem;">💰 {{ place['Budget'] }}</span>
+            </div>
+            <a href="{{ url_for('recommend_bp.place_detail', name=place['Place']) }}" class="btn btn-primary btn-sm w-100">View Details</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- MOTIVATION -->
+    <div class="motivation-banner mb-5">
+      <h4>✨ Travel Inspiration</h4>
+      <p>"The world is a book, and those who do not travel read only one page."</p>
+    </div>
+
+    <!-- SAVED TRIPS -->
+    <div class="sec-head"><h4>🗺 Saved Trips</h4><div class="sec-line"></div></div>
+    {% if saved_trips %}
+    {% for trip in saved_trips %}
+    <div class="trip-row">
+      <div>
+        <div style="font-weight:700;font-size:1rem;">📍 {{ trip[0] }}</div>
+        <div class="text-muted" style="font-size:.82rem;">{{ trip[1] }} days · ₹{{ trip[2] }} budget</div>
+      </div>
+      <form method="POST" action="/delete_trip">
+        <input type="hidden" name="district" value="{{ trip[0] }}">
+        <input type="hidden" name="created_at" value="{{ trip[3] }}">
+        <button class="btn btn-outline-danger btn-sm">Delete</button>
+      </form>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-muted text-center py-4" style="font-size:.9rem;">No saved trips yet. <a href="/trip_planner">Plan your first trip →</a></div>
+    {% endif %}
+
+  </div>
+
+  <footer style="text-align:center;padding:32px;background:var(--bg-secondary);border-top:1px solid var(--border-color);color:var(--text-muted);font-size:.85rem;margin-top:20px;">
+    Smart Travel Assistant © 2026 &nbsp;·&nbsp; AI-Powered Tourism & Trip Planning
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script type="application/json" id="chartData">
+{
+  "labels": {{ category_labels | tojson }},
+  "values": {{ category_values | tojson }},
+  "chart_labels": {{ trending | map(attribute=0) | list | tojson if trending else [] }},
+  "chart_values": {{ trending | map(attribute=1) | list | tojson if trending else [] }}
+}
+  </script>
+
+  <script>
+    // Page loader
+    window.addEventListener('load',()=>{ const l=document.getElementById('loader'); if(l){l.style.opacity='0';setTimeout(()=>l.style.display='none',400);} });
+
+    // Activity bar
+    document.addEventListener('DOMContentLoaded',()=>{
+      const bar=document.querySelector('.activity-bar');
+      if(bar) bar.style.width='{{ activity_score }}%';
+    });
+
+    // Counters
+    document.querySelectorAll('.counter').forEach(c=>{
+      const target=+c.getAttribute('data-target'); let count=0;
+      const step=()=>{ const inc=target/50; if(count<target){ count+=inc; c.innerText=Math.ceil(count); setTimeout(step,18); } else c.innerText=target; };
+      step();
+    });
+
+    // Charts
+    const rawData=JSON.parse(document.getElementById('chartData').textContent);
+    let catChart,trendChart;
+    function renderCharts(){
+      if(typeof window.getChartColors!=='function') return;
+      const th=window.getChartColors();
+      Chart.defaults.color=th.textColor;
+
+      const ctx=document.getElementById('categoryChart');
+      if(ctx&&rawData.labels.length>0){
+        if(catChart) catChart.destroy();
+        catChart=new Chart(ctx,{
+          type:'doughnut',
+          data:{ labels:rawData.labels,
+            datasets:[{ data:rawData.values,
+              backgroundColor:['#1f3c88','#f7971e','#11998e','#c94b4b','#667eea','#764ba2'],
+              borderColor:document.documentElement.getAttribute('data-theme')==='dark'?'#151f35':'#fff',
+              borderWidth:3,borderRadius:5,hoverOffset:14
+            }]
+          },
+          options:{ responsive:true,maintainAspectRatio:false,cutout:'68%',
+            plugins:{ legend:{ position:'bottom', labels:{ color:th.textColor,padding:16,usePointStyle:true,pointStyle:'circle',font:{size:11} }},
+              tooltip:{ backgroundColor:th.tooltipBg,titleColor:th.tooltipText,bodyColor:th.tooltipText,padding:10,cornerRadius:8 }
+            }
+          }
+        });
+      }
+
+      const ctx2=document.getElementById('trendingChart');
+      if(ctx2&&rawData.chart_labels.length>0){
+        if(trendChart) trendChart.destroy();
+        const g=ctx2.getContext('2d').createLinearGradient(0,0,0,300);
+        g.addColorStop(0,th.primaryGradientStart); g.addColorStop(1,th.primaryGradientEnd);
+        trendChart=new Chart(ctx2,{
+          type:'bar',
+          data:{ labels:rawData.chart_labels,
+            datasets:[{ label:'Visits', data:rawData.chart_values,
+              backgroundColor:g, borderColor:th.primaryGradientStart,
+              borderWidth:1.5, borderRadius:8, borderSkipped:false
+            }]
+          },
+          options:{ responsive:true,maintainAspectRatio:false,
+            scales:{ y:{ beginAtZero:true,grid:{color:th.gridColor},ticks:{precision:0,color:th.textColor}},
+              x:{ grid:{display:false},ticks:{color:th.textColor} }},
+            plugins:{ legend:{display:false},
+              tooltip:{ backgroundColor:th.tooltipBg,titleColor:th.tooltipText,bodyColor:th.tooltipText,cornerRadius:8 }
+            }
+          }
+        });
+      }
+    }
+    setTimeout(renderCharts,120);
+    window.addEventListener('themeChanged',renderCharts);
+  </script>
+
+  {% include 'chatbot.html' %}
+</body>
+</html>
